@@ -144,17 +144,24 @@ type remoteUsageNodeItem struct {
 
 func buildFederationServiceConfig(serviceName, addr, protocol, role, chainName string, targetCount int, interfaceName string) map[string]interface{} {
 	service := map[string]interface{}{
-		"name": serviceName,
-		"addr": addr,
+		"name":     serviceName,
+		"addr":     addr,
 		"handler": map[string]interface{}{
 			"type": "relay",
 		},
-		"listener": map[string]interface{}{
-			"type": protocol,
-		},
+		"listener": buildTunnelListenerConfig(protocol),
 	}
-	if isTLSTunnelProtocol(protocol) {
-		service["handler"].(map[string]interface{})["metadata"] = map[string]interface{}{"nodelay": true}
+	if isTCPTunnelProtocol(protocol) {
+		service["handler"].(map[string]interface{})["metadata"] = map[string]interface{}{
+			"nodelay":               true,
+			"mux.keepaliveInterval": "15s",
+			"mux.keepaliveTimeout":  "45s",
+		}
+	}
+	if isKCPTunnelProtocol(protocol) {
+		service["handler"].(map[string]interface{})["metadata"] = map[string]interface{}{
+			"connectTimeout": "30s",
+		}
 	}
 	if role == "middle" {
 		service["handler"].(map[string]interface{})["chain"] = chainName
@@ -1095,16 +1102,23 @@ func (h *Handler) federationRuntimeApplyRole(w http.ResponseWriter, r *http.Requ
 			connector := map[string]interface{}{
 				"type": "relay",
 			}
-			if isTLSTunnelProtocol(targetProtocol) {
-				connector["metadata"] = map[string]interface{}{"nodelay": true}
+			if isTCPTunnelProtocol(targetProtocol) {
+				connector["metadata"] = map[string]interface{}{
+					"nodelay":               true,
+					"mux.keepaliveInterval": "15s",
+					"mux.keepaliveTimeout":  "45s",
+				}
+			}
+			if isKCPTunnelProtocol(targetProtocol) {
+				connector["metadata"] = map[string]interface{}{
+					"connectTimeout": "30s",
+				}
 			}
 			nodeItems = append(nodeItems, map[string]interface{}{
 				"name":      fmt.Sprintf("node_%d", i+1),
 				"addr":      processServerAddress(fmt.Sprintf("%s:%d", host, target.Port)),
 				"connector": connector,
-				"dialer": map[string]interface{}{
-					"type": targetProtocol,
-				},
+				"dialer":    buildTunnelDialerConfig(targetProtocol),
 			})
 		}
 

@@ -185,14 +185,6 @@ func (h *Handler) listForwardPorts(forwardID int64) ([]forwardPortRecord, error)
 	return h.repo.ListForwardPorts(forwardID)
 }
 
-func (h *Handler) isTunnelSelectedTLSProtocol(tunnelID int64) (bool, error) {
-	protocol, err := h.repo.GetTunnelOutProtocol(tunnelID)
-	if err != nil {
-		return false, err
-	}
-	return isTLSTunnelProtocol(protocol), nil
-}
-
 func (h *Handler) getNodeRecord(nodeID int64) (*nodeRecord, error) {
 	n, err := h.repo.GetNodeRecord(nodeID)
 	if err != nil {
@@ -272,10 +264,6 @@ func (h *Handler) syncForwardServicesWithWarnings(forward *forwardRecord, method
 	}
 
 	serviceBase := buildForwardServiceBaseWithResolvedUserTunnel(forward.ID, forward.UserID, userTunnelID)
-	tunnelTLSProtocol, err := h.isTunnelSelectedTLSProtocol(forward.TunnelID)
-	if err != nil {
-		return nil, err
-	}
 
 	for _, fp := range ports {
 		if limiterID != nil && speed != nil {
@@ -298,7 +286,7 @@ func (h *Handler) syncForwardServicesWithWarnings(forward *forwardRecord, method
 		if err != nil {
 			return nil, err
 		}
-		services := buildForwardServiceConfigs(serviceBase, forward, tunnel, node, fp.Port, strings.TrimSpace(fp.InIP), limiterID, tunnelTLSProtocol)
+		services := buildForwardServiceConfigs(serviceBase, forward, tunnel, node, fp.Port, strings.TrimSpace(fp.InIP), limiterID)
 		_, err = h.sendNodeCommand(node.ID, method, services, true, false)
 		if err != nil && allowFallbackAdd && method == "UpdateService" {
 			if isNotFoundError(err) {
@@ -313,7 +301,7 @@ func (h *Handler) syncForwardServicesWithWarnings(forward *forwardRecord, method
 		}
 		if err != nil && strings.EqualFold(strings.TrimSpace(method), "UpdateService") && isCannotAssignRequestedAddressError(err) {
 			var warning string
-			warning, err = h.fallbackForwardPortToDefaultBind(forward, tunnel, node, fp, serviceBase, limiterID, tunnelTLSProtocol)
+			warning, err = h.fallbackForwardPortToDefaultBind(forward, tunnel, node, fp, serviceBase, limiterID)
 			if err == nil && warning != "" {
 				warnings = append(warnings, warning)
 			}
@@ -339,7 +327,7 @@ func (h *Handler) syncForwardServicesWithWarnings(forward *forwardRecord, method
 	return warnings, nil
 }
 
-func (h *Handler) fallbackForwardPortToDefaultBind(forward *forwardRecord, tunnel *tunnelRecord, node *nodeRecord, fp forwardPortRecord, serviceBase string, limiterID *int64, tunnelTLSProtocol bool) (string, error) {
+func (h *Handler) fallbackForwardPortToDefaultBind(forward *forwardRecord, tunnel *tunnelRecord, node *nodeRecord, fp forwardPortRecord, serviceBase string, limiterID *int64) (string, error) {
 	if h == nil || forward == nil || tunnel == nil || node == nil {
 		return "", errors.New("invalid bind fallback context")
 	}
@@ -356,7 +344,7 @@ func (h *Handler) fallbackForwardPortToDefaultBind(forward *forwardRecord, tunne
 	}
 
 	time.Sleep(150 * time.Millisecond)
-	defaultServices := buildForwardServiceConfigs(serviceBase, forward, tunnel, node, fp.Port, "", limiterID, tunnelTLSProtocol)
+	defaultServices := buildForwardServiceConfigs(serviceBase, forward, tunnel, node, fp.Port, "", limiterID)
 	if _, err := h.sendNodeCommand(node.ID, "AddService", defaultServices, true, false); err != nil {
 		return "", err
 	}
@@ -1561,7 +1549,7 @@ func compactErrorMessage(msg string) string {
 	return strings.Join(strings.Fields(strings.ToLower(msg)), "")
 }
 
-func buildForwardServiceConfigs(baseName string, forward *forwardRecord, tunnel *tunnelRecord, node *nodeRecord, port int, bindIP string, limiterID *int64, tunnelTLSProtocol bool) []map[string]interface{} {
+func buildForwardServiceConfigs(baseName string, forward *forwardRecord, tunnel *tunnelRecord, node *nodeRecord, port int, bindIP string, limiterID *int64) []map[string]interface{} {
 	protocols := []string{"tcp", "udp"}
 	services := make([]map[string]interface{}, 0, 2)
 	targets := splitRemoteTargets(forward.RemoteAddr)
@@ -1605,9 +1593,9 @@ func buildForwardServiceConfigs(baseName string, forward *forwardRecord, tunnel 
 			},
 		}
 		if protocol == "udp" {
-			listenerMetadata := map[string]interface{}{"keepAlive": true}
-			if tunnelTLSProtocol {
-				listenerMetadata["ttl"] = "10s"
+			listenerMetadata := map[string]interface{}{
+				"keepAlive": true,
+				"ttl":       "30s",
 			}
 			service["listener"].(map[string]interface{})["metadata"] = listenerMetadata
 		}

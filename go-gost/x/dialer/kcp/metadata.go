@@ -42,7 +42,7 @@ func (d *kcpDialer) parseMetadata(md mdata.Metadata) (err error) {
 	if d.md.config == nil {
 		d.md.config = kcp_util.DefaultConfig
 	}
-	d.md.config.TCP = mdutil.GetBool(md, "kcp.tcp", "tcp")
+	d.md.config.TCP = mdutil.GetBool(md, "kcp.tcp")
 	d.md.config.Key = mdutil.GetString(md, "kcp.key")
 	d.md.config.Crypt = mdutil.GetString(md, "kcp.crypt")
 	d.md.config.Mode = mdutil.GetString(md, "kcp.mode")

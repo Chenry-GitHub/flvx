@@ -3452,16 +3452,23 @@ func buildTunnelChainConfig(tunnelID int64, fromNodeID int64, targets []tunnelRu
 		connector := map[string]interface{}{
 			"type": "relay",
 		}
-		if isTLSTunnelProtocol(protocol) {
-			connector["metadata"] = map[string]interface{}{"nodelay": true}
+		connectorMetadata := map[string]interface{}{}
+		if isTCPTunnelProtocol(protocol) {
+			connectorMetadata["nodelay"] = true
+			connectorMetadata["mux.keepaliveInterval"] = "15s"
+			connectorMetadata["mux.keepaliveTimeout"] = "45s"
+		}
+		if isKCPTunnelProtocol(protocol) {
+			connectorMetadata["connectTimeout"] = "30s"
+		}
+		if len(connectorMetadata) > 0 {
+			connector["metadata"] = connectorMetadata
 		}
 		nodeItems = append(nodeItems, map[string]interface{}{
 			"name":      fmt.Sprintf("node_%d", idx+1),
 			"addr":      processServerAddress(fmt.Sprintf("%s:%d", host, port)),
 			"connector": connector,
-			"dialer": map[string]interface{}{
-				"type": protocol,
-			},
+			"dialer":    buildTunnelDialerConfig(protocol),
 		})
 	}
 
@@ -3493,19 +3500,26 @@ func buildTunnelChainServiceConfig(tunnelID int64, chainNode tunnelRuntimeNode, 
 	handlerCfg := map[string]interface{}{
 		"type": "relay",
 	}
-	if isTLSTunnelProtocol(protocol) {
-		handlerCfg["metadata"] = map[string]interface{}{"nodelay": true}
+	handlerMetadata := map[string]interface{}{}
+	if isTCPTunnelProtocol(protocol) {
+		handlerMetadata["nodelay"] = true
+		handlerMetadata["mux.keepaliveInterval"] = "15s"
+		handlerMetadata["mux.keepaliveTimeout"] = "45s"
+	}
+	if isKCPTunnelProtocol(protocol) {
+		handlerMetadata["connectTimeout"] = "30s"
+	}
+	if len(handlerMetadata) > 0 {
+		handlerCfg["metadata"] = handlerMetadata
 	}
 	if nextHopCandidateCount > 1 {
 		handlerCfg["retries"] = nextHopCandidateCount - 1
 	}
 	service := map[string]interface{}{
-		"name":    fmt.Sprintf("%d_tls", tunnelID),
-		"addr":    processServerAddress(fmt.Sprintf("%s:%d", defaultString(strings.TrimSpace(chainNode.ConnectIP), node.TCPListenAddr), chainNode.Port)),
-		"handler": handlerCfg,
-		"listener": map[string]interface{}{
-			"type": protocol,
-		},
+		"name":     fmt.Sprintf("%d_%s", tunnelID, protocol),
+		"addr":     processServerAddress(fmt.Sprintf("%s:%d", defaultString(strings.TrimSpace(chainNode.ConnectIP), node.TCPListenAddr), chainNode.Port)),
+		"handler":  handlerCfg,
+		"listener": buildTunnelListenerConfig(protocol),
 	}
 	if chainNode.ChainType == 2 {
 		service["handler"].(map[string]interface{})["chain"] = fmt.Sprintf("chains_%d", tunnelID)
@@ -3588,8 +3602,43 @@ func nodeDisplayName(node *nodeRecord) string {
 	return fmt.Sprintf("node_%d", node.ID)
 }
 
+func isTCPTunnelProtocol(protocol string) bool {
+	p := strings.ToLower(strings.TrimSpace(defaultString(protocol, "tls")))
+	return p == "tls" || p == "mtls" || p == "mtcp"
+}
+
+func isKCPTunnelProtocol(protocol string) bool {
+	return strings.EqualFold(strings.TrimSpace(protocol), "kcp")
+}
+
 func isTLSTunnelProtocol(protocol string) bool {
 	return strings.EqualFold(strings.TrimSpace(defaultString(protocol, "tls")), "tls")
+}
+
+func buildTunnelDialerConfig(protocol string) map[string]interface{} {
+	dialer := map[string]interface{}{
+		"type": protocol,
+	}
+	if isKCPTunnelProtocol(protocol) {
+		dialer["metadata"] = map[string]interface{}{
+			"kcp.keepalive": 10,
+			"kcp.tcp":       false,
+		}
+	}
+	return dialer
+}
+
+func buildTunnelListenerConfig(protocol string) map[string]interface{} {
+	listener := map[string]interface{}{
+		"type": protocol,
+	}
+	if isKCPTunnelProtocol(protocol) {
+		listener["metadata"] = map[string]interface{}{
+			"kcp.keepalive": 10,
+			"kcp.tcp":       false,
+		}
+	}
+	return listener
 }
 
 func nodeSupportsV4(node *nodeRecord) bool {

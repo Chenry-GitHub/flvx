@@ -45,7 +45,7 @@ func (l *kcpListener) parseMetadata(md mdata.Metadata) (err error) {
 	if l.md.config == nil {
 		l.md.config = kcp_util.DefaultConfig
 	}
-	l.md.config.TCP = mdutil.GetBool(md, "kcp.tcp", "tcp")
+	l.md.config.TCP = mdutil.GetBool(md, "kcp.tcp")
 	l.md.config.Key = mdutil.GetString(md, "kcp.key")
 	l.md.config.Crypt = mdutil.GetString(md, "kcp.crypt")
 	l.md.config.Mode = mdutil.GetString(md, "kcp.mode")

@@ -40,7 +40,7 @@ var (
 		SnmpLog:      "",
 		SnmpPeriod:   60,
 		Signal:       false,
-		TCP:          false,
+		TCP:          false, // default UDP mode (use tcpraw when true)
 	}
 )
 

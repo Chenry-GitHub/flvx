@@ -90,7 +90,7 @@ import {
 
 interface ChainTunnel {
   nodeId: number;
-  protocol?: string; // 'tls' | 'wss' | 'tcp' | 'mtls' | 'mwss' | 'mtcp' - 转发链协议
+  protocol?: string; // 'tls' | 'wss' | 'tcp' | 'mtls' | 'mwss' | 'mtcp' | 'kcp' - 转发链协议
   strategy?: string; // 'fifo' | 'round' | 'rand' - 仅转发链需要
   chainType?: number; // 1: 入口, 2: 转发链, 3: 出口
   inx?: number; // 转发链序号
@@ -2456,6 +2456,7 @@ export default function TunnelPage() {
                                     <SelectItem key="mtls">MTLS</SelectItem>
                                     <SelectItem key="mwss">MWSS</SelectItem>
                                     <SelectItem key="mtcp">MTCP</SelectItem>
+                                    <SelectItem key="kcp">KCP</SelectItem>
                                   </Select>
 
                                   {/* 负载策略 - 25% */}
@@ -2756,6 +2757,7 @@ export default function TunnelPage() {
                                 <SelectItem key="mtls">MTLS</SelectItem>
                                 <SelectItem key="mwss">MWSS</SelectItem>
                                 <SelectItem key="mtcp">MTCP</SelectItem>
+                                <SelectItem key="kcp">KCP</SelectItem>
                               </Select>
 
                               {/* 负载策略 - 25% */}
