@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 	"sort"
 	"strconv"
 	"strings"
@@ -633,6 +634,15 @@ func (h *Handler) nodeImport(w http.ResponseWriter, r *http.Request) {
 
 	if req.RemoteURL == "" || req.Token == "" {
 		response.WriteJSON(w, response.ErrDefault("Remote URL and Token are required"))
+		return
+	}
+	rURL, err := url.Parse(req.RemoteURL)
+	if err != nil || (rURL.Scheme != "http" && rURL.Scheme != "https") {
+		response.WriteJSON(w, response.ErrDefault("Invalid Remote URL format"))
+		return
+	}
+	if err := IsSafeRemoteAddr(rURL.Host); err != nil {
+		response.WriteJSON(w, response.Err(403, "禁止将远程节点地址设置为内部网络或保留地址"))
 		return
 	}
 

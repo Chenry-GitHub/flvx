@@ -27,6 +27,7 @@ import (
 
 	"github.com/google/uuid"
 )
+
 type Handler struct {
 	repo        *repo.Repository
 	jwtSecret   string
@@ -356,6 +357,12 @@ func (h *Handler) getConfigByName(w http.ResponseWriter, r *http.Request) {
 		response.WriteJSON(w, response.ErrDefault("配置名称不能为空"))
 		return
 	}
+	configName := strings.ToLower(strings.TrimSpace(req.Name))
+	switch configName {
+	case "license_key", "cloudflare_secret_key", "jwt_secret":
+		response.WriteJSON(w, response.Err(403, "禁止访问敏感配置"))
+		return
+	}
 
 	cfg, err := h.repo.GetConfigByName(req.Name)
 	if err != nil {
@@ -380,6 +387,12 @@ func (h *Handler) getConfigs(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		response.WriteJSON(w, response.Err(-2, err.Error()))
 		return
+	}
+	ctxClaims := r.Context().Value(middleware.ClaimsContextKey)
+	if claims, ok := ctxClaims.(auth.Claims); !ok || claims.RoleID != 0 {
+		delete(cfgMap, "license_key")
+		delete(cfgMap, "cloudflare_secret_key")
+		delete(cfgMap, "jwt_secret")
 	}
 	response.WriteJSON(w, response.OK(cfgMap))
 }
@@ -852,7 +865,7 @@ func (h *Handler) licenseActivate(w http.ResponseWriter, r *http.Request) {
 				response.WriteJSON(w, response.ErrDefault("设备绑定失败: "+err.Error()))
 				return
 			}
-			
+
 			// Validation might still fail with scope if we don't query via machine id, but since activate machine succeeded
 			// we can consider the license valid for our simple usecase
 		} else {
