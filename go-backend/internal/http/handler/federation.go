@@ -86,10 +86,11 @@ type federationRuntimeReleaseRoleRequest struct {
 }
 
 type federationRuntimeDiagnoseRequest struct {
-	IP      string `json:"ip"`
-	Port    int    `json:"port"`
-	Count   int    `json:"count"`
-	Timeout int    `json:"timeout"`
+	IP       string `json:"ip"`
+	Port     int    `json:"port"`
+	Count    int    `json:"count"`
+	Timeout  int    `json:"timeout"`
+	Protocol string `json:"protocol"`
 }
 
 type federationRuntimeCommandRequest struct {
@@ -1281,7 +1282,12 @@ func (h *Handler) federationRuntimeDiagnose(w http.ResponseWriter, r *http.Reque
 		commandTimeout = diagnosisCommandTimeout
 	}
 
-	res, err := h.sendNodeCommandWithTimeout(share.NodeID, "TcpPing", map[string]interface{}{
+	commandType := "TcpPing"
+	if isUDPBasedProtocol(req.Protocol) {
+		commandType = "UdpPing"
+	}
+
+	res, err := h.sendNodeCommandWithTimeout(share.NodeID, commandType, map[string]interface{}{
 		"ip":      req.IP,
 		"port":    req.Port,
 		"count":   req.Count,

@@ -11,6 +11,7 @@ import (
 	"github.com/go-gost/core/logger"
 	md "github.com/go-gost/core/metadata"
 	kcp_util "github.com/go-gost/x/internal/util/kcp"
+	mdutil "github.com/go-gost/x/metadata/util"
 	"github.com/go-gost/x/registry"
 	"github.com/xtaci/kcp-go/v5"
 	"github.com/xtaci/smux"
@@ -48,6 +49,9 @@ func (d *kcpDialer) Init(md md.Metadata) (err error) {
 	}
 
 	d.md.config.Init()
+	if md != nil && md.IsExists("kcp.nc") {
+		d.md.config.NoCongestion = mdutil.GetInt(md, "kcp.nc")
+	}
 
 	return nil
 }

@@ -1402,10 +1402,37 @@ func (h *Handler) tcpPingViaRemoteNode(node *nodeRecord, ip string, port int, op
 
 	fc := client.NewFederationClientWithTimeout(options.commandTimeout)
 	return fc.Diagnose(remoteURL, remoteToken, h.federationLocalDomain(), client.RuntimeDiagnoseRequest{
-		IP:      strings.TrimSpace(ip),
-		Port:    port,
-		Count:   4,
-		Timeout: options.pingTimeoutMS,
+		IP:       strings.TrimSpace(ip),
+		Port:     port,
+		Count:    4,
+		Timeout:  options.pingTimeoutMS,
+		Protocol: "tcp",
+	})
+}
+
+func (h *Handler) udpPingViaRemoteNode(node *nodeRecord, ip string, port int, options diagnosisExecOptions) (map[string]interface{}, error) {
+	if node == nil {
+		return nil, errors.New("节点不存在")
+	}
+	remoteURL := strings.TrimSpace(node.RemoteURL)
+	remoteToken := strings.TrimSpace(node.RemoteToken)
+	if remoteURL == "" || remoteToken == "" {
+		return nil, errors.New("远程节点缺少共享配置")
+	}
+	if options.commandTimeout <= 0 {
+		options.commandTimeout = diagnosisCommandTimeout
+	}
+	if options.pingTimeoutMS <= 0 {
+		options.pingTimeoutMS = int(diagnosisCommandTimeout / time.Millisecond)
+	}
+
+	fc := client.NewFederationClientWithTimeout(options.commandTimeout)
+	return fc.Diagnose(remoteURL, remoteToken, h.federationLocalDomain(), client.RuntimeDiagnoseRequest{
+		IP:       strings.TrimSpace(ip),
+		Port:     port,
+		Count:    4,
+		Timeout:  options.pingTimeoutMS,
+		Protocol: "udp",
 	})
 }
 
@@ -1422,6 +1449,9 @@ func (h *Handler) pingViaNode(nodeID int64, ip string, port int, protocol string
 }
 
 func (h *Handler) pingViaRemoteNode(node *nodeRecord, ip string, port int, protocol string, options diagnosisExecOptions) (map[string]interface{}, error) {
+	if isUDPBasedProtocol(protocol) {
+		return h.udpPingViaRemoteNode(node, ip, port, options)
+	}
 	return h.tcpPingViaRemoteNode(node, ip, port, options)
 }
 

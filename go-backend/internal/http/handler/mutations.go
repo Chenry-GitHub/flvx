@@ -3635,13 +3635,14 @@ func buildTunnelDialerConfig(protocol string) map[string]interface{} {
 		dialer["metadata"] = map[string]interface{}{
 			"kcp.keepalive":   10,
 			"kcp.tcp":         false,
-			"kcp.mode":        "fast3",
+			"kcp.mode":        "fast2",
 			"kcp.sndwnd":      2048,
 			"kcp.rcvwnd":      2048,
 			"kcp.mtu":         1400,
-			"kcp.datashard":   0,
-			"kcp.parityshard": 0,
+			"kcp.datashard":   10,
+			"kcp.parityshard": 3,
 			"kcp.nocomp":      true,
+			"kcp.nc":          0,
 		}
 	}
 	return dialer
@@ -3655,13 +3656,14 @@ func buildTunnelListenerConfig(protocol string) map[string]interface{} {
 		listener["metadata"] = map[string]interface{}{
 			"kcp.keepalive":   10,
 			"kcp.tcp":         false,
-			"kcp.mode":        "fast3",
+			"kcp.mode":        "fast2",
 			"kcp.sndwnd":      2048,
 			"kcp.rcvwnd":      2048,
 			"kcp.mtu":         1400,
-			"kcp.datashard":   0,
-			"kcp.parityshard": 0,
+			"kcp.datashard":   10,
+			"kcp.parityshard": 3,
 			"kcp.nocomp":      true,
+			"kcp.nc":          0,
 		}
 	}
 	return listener
