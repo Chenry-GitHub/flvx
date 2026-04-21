@@ -43,16 +43,19 @@ func (h *Handler) processFlowItem(nodeID int64, item flowItem) {
 
 	forwardID, userID, userTunnelID, ok := parseFlowServiceIDs(serviceName)
 	if ok {
-		inFlow, outFlow := h.scaleFlowByTunnel(forwardID, item.D, item.U)
-		_ = h.repo.AddFlow(forwardID, userID, userTunnelID, inFlow, outFlow)
-		if quota, quotaErr := h.repo.AddUserQuotaUsage(userID, inFlow+outFlow, time.Now()); quotaErr == nil {
-			h.enforceUserQuotaIfNeeded(userID, quota)
+		if h.forwardExists(forwardID) {
+			inFlow, outFlow := h.scaleFlowByTunnel(forwardID, item.D, item.U)
+			_ = h.repo.AddFlow(forwardID, userID, userTunnelID, inFlow, outFlow)
+			if quota, quotaErr := h.repo.AddUserQuotaUsage(userID, inFlow+outFlow, time.Now()); quotaErr == nil {
+				h.enforceUserQuotaIfNeeded(userID, quota)
+			}
+			if userTunnelID > 0 {
+				h.enforceFlowPolicies(userID, userTunnelID)
+			}
+		} else if nodeID > 0 {
+			h.sendDeleteOrphanedForwardService(nodeID, serviceName)
 		}
 		h.processPeerShareFlowFromForward(forwardID, nodeID, serviceName, item)
-
-		if userTunnelID > 0 {
-			h.enforceFlowPolicies(userID, userTunnelID)
-		}
 		return
 	}
 
@@ -626,6 +629,21 @@ func (h *Handler) tunnelExists(tunnelID int64) bool {
 func (h *Handler) forwardExists(forwardID int64) bool {
 	ok, _ := h.repo.ForwardExists(forwardID)
 	return ok
+}
+
+func (h *Handler) sendDeleteOrphanedForwardService(nodeID int64, serviceName string) {
+	parts := strings.Split(serviceName, "_")
+	if len(parts) < 3 {
+		return
+	}
+	forwardID, err := strconv.ParseInt(parts[0], 10, 64)
+	if err != nil || forwardID <= 0 {
+		return
+	}
+	base := parts[0] + "_" + parts[1] + "_" + parts[2]
+	_, _ = h.sendNodeCommand(nodeID, "DeleteService", map[string]interface{}{
+		"services": []string{base + "_tcp", base + "_udp"},
+	}, false, true)
 }
 
 func (h *Handler) speedLimiterExists(name string) bool {
