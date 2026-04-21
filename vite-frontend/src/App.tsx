@@ -5,7 +5,7 @@ import {
   useNavigate,
   Navigate,
 } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 
 import IndexPage from "@/pages/index";
@@ -27,8 +27,8 @@ import H5SimpleLayout from "@/layouts/h5-simple";
 import { isLoggedIn } from "@/utils/auth";
 import { siteConfig, updateSiteConfig } from "@/config/site";
 import { useH5Mode } from "@/hooks/useH5Mode";
+import { SESSION_UPDATED_EVENT } from "@/utils/session";
 
-// 简化的路由保护组件 - 使用 React Router 导航避免循环
 const ProtectedRoute = ({
   children,
   useSimpleLayout = false,
@@ -38,13 +38,30 @@ const ProtectedRoute = ({
   useSimpleLayout?: boolean;
   skipLayout?: boolean;
 }) => {
-  const authenticated = isLoggedIn();
   const isH5 = useH5Mode();
   const navigate = useNavigate();
+  const [authenticated, setAuthenticated] = useState(() => isLoggedIn());
+
+  useEffect(() => {
+    const handleSessionChange = () => {
+      const loggedIn = isLoggedIn();
+
+      setAuthenticated(loggedIn);
+
+      if (!loggedIn) {
+        navigate("/", { replace: true });
+      }
+    };
+
+    window.addEventListener(SESSION_UPDATED_EVENT, handleSessionChange);
+
+    return () => {
+      window.removeEventListener(SESSION_UPDATED_EVENT, handleSessionChange);
+    };
+  }, [navigate]);
 
   useEffect(() => {
     if (!authenticated) {
-      // 使用 React Router 导航，避免无限跳转
       navigate("/", { replace: true });
     }
   }, [authenticated, navigate]);
