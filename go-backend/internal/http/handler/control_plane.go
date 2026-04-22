@@ -711,7 +711,7 @@ func (h *Handler) prepareForwardDiagnosis(forward *forwardRecord) (string, []dia
 					targetIP:    target.IP,
 					targetPort:  target.Port,
 					description: description,
-					protocol:    protocol,
+					protocol:    "tcp",
 					metadata: map[string]interface{}{
 						"fromChainType": 1,
 					},
@@ -729,7 +729,7 @@ func (h *Handler) prepareForwardDiagnosis(forward *forwardRecord) (string, []dia
 						hasChainHop:  true,
 						ipPreference: ipPreference,
 						description:  description,
-						protocol:     protocol,
+						protocol:     defaultString(strings.ToLower(strings.TrimSpace(firstNode.Protocol)), protocol),
 						metadata: map[string]interface{}{
 							"fromChainType": 1,
 							"toChainType":   2,
@@ -746,7 +746,7 @@ func (h *Handler) prepareForwardDiagnosis(forward *forwardRecord) (string, []dia
 						hasChainHop:  true,
 						ipPreference: ipPreference,
 						description:  description,
-						protocol:     protocol,
+						protocol:     defaultString(strings.ToLower(strings.TrimSpace(outNode.Protocol)), protocol),
 						metadata: map[string]interface{}{
 							"fromChainType": 1,
 							"toChainType":   3,
@@ -767,7 +767,7 @@ func (h *Handler) prepareForwardDiagnosis(forward *forwardRecord) (string, []dia
 							hasChainHop:  true,
 							ipPreference: ipPreference,
 							description:  description,
-							protocol:     protocol,
+							protocol:     defaultString(strings.ToLower(strings.TrimSpace(nextNode.Protocol)), protocol),
 							metadata: map[string]interface{}{
 								"fromChainType": 2,
 								"fromInx":       currentNode.Inx,
@@ -785,7 +785,7 @@ func (h *Handler) prepareForwardDiagnosis(forward *forwardRecord) (string, []dia
 							hasChainHop:  true,
 							ipPreference: ipPreference,
 							description:  description,
-							protocol:     protocol,
+							protocol:     defaultString(strings.ToLower(strings.TrimSpace(outNode.Protocol)), protocol),
 							metadata: map[string]interface{}{
 								"fromChainType": 2,
 								"fromInx":       currentNode.Inx,
@@ -805,7 +805,7 @@ func (h *Handler) prepareForwardDiagnosis(forward *forwardRecord) (string, []dia
 					targetIP:    target.IP,
 					targetPort:  target.Port,
 					description: description,
-					protocol:    protocol,
+					protocol:    "tcp",
 					metadata: map[string]interface{}{
 						"fromChainType": 3,
 					},
@@ -821,7 +821,7 @@ func (h *Handler) prepareForwardDiagnosis(forward *forwardRecord) (string, []dia
 					targetIP:    target.IP,
 					targetPort:  target.Port,
 					description: description,
-					protocol:    protocol,
+					protocol:    "tcp",
 					metadata: map[string]interface{}{
 						"fromChainType": 1,
 					},
@@ -889,7 +889,7 @@ func (h *Handler) prepareTunnelDiagnosis(tunnelID int64) (string, string, []diag
 				targetIP:    "www.bing.com",
 				targetPort:  443,
 				description: description,
-				protocol:    protocol,
+				protocol:    "tcp",
 				metadata: map[string]interface{}{
 					"fromChainType": 1,
 				},
@@ -906,7 +906,7 @@ func (h *Handler) prepareTunnelDiagnosis(tunnelID int64) (string, string, []diag
 						hasChainHop:  true,
 						ipPreference: ipPreference,
 						description:  description,
-						protocol:     protocol,
+						protocol:     defaultString(strings.ToLower(strings.TrimSpace(firstNode.Protocol)), protocol),
 						metadata: map[string]interface{}{
 							"fromChainType": 1,
 							"toChainType":   2,
@@ -923,7 +923,7 @@ func (h *Handler) prepareTunnelDiagnosis(tunnelID int64) (string, string, []diag
 						hasChainHop:  true,
 						ipPreference: ipPreference,
 						description:  description,
-						protocol:     protocol,
+						protocol:     defaultString(strings.ToLower(strings.TrimSpace(outNode.Protocol)), protocol),
 						metadata: map[string]interface{}{
 							"fromChainType": 1,
 							"toChainType":   3,
@@ -944,7 +944,7 @@ func (h *Handler) prepareTunnelDiagnosis(tunnelID int64) (string, string, []diag
 							hasChainHop:  true,
 							ipPreference: ipPreference,
 							description:  description,
-							protocol:     protocol,
+							protocol:     defaultString(strings.ToLower(strings.TrimSpace(nextNode.Protocol)), protocol),
 							metadata: map[string]interface{}{
 								"fromChainType": 2,
 								"fromInx":       currentNode.Inx,
@@ -962,7 +962,7 @@ func (h *Handler) prepareTunnelDiagnosis(tunnelID int64) (string, string, []diag
 							hasChainHop:  true,
 							ipPreference: ipPreference,
 							description:  description,
-							protocol:     protocol,
+							protocol:     defaultString(strings.ToLower(strings.TrimSpace(outNode.Protocol)), protocol),
 							metadata: map[string]interface{}{
 								"fromChainType": 2,
 								"fromInx":       currentNode.Inx,
@@ -981,7 +981,7 @@ func (h *Handler) prepareTunnelDiagnosis(tunnelID int64) (string, string, []diag
 				targetIP:    "www.bing.com",
 				targetPort:  443,
 				description: description,
-				protocol:    protocol,
+				protocol:    "tcp",
 				metadata: map[string]interface{}{
 					"fromChainType": 3,
 				},
@@ -995,7 +995,7 @@ func (h *Handler) prepareTunnelDiagnosis(tunnelID int64) (string, string, []diag
 				targetIP:    "www.bing.com",
 				targetPort:  443,
 				description: description,
-				protocol:    protocol,
+				protocol:    "tcp",
 				metadata: map[string]interface{}{
 					"fromChainType": 1,
 				},
