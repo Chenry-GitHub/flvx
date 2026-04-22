@@ -3564,7 +3564,7 @@ func buildTunnelChainServiceConfig(tunnelID int64, chainNode tunnelRuntimeNode, 
 		handlerCfg["retries"] = nextHopCandidateCount - 1
 	}
 	service := map[string]interface{}{
-		"name":     fmt.Sprintf("%d_%s", tunnelID, protocol),
+		"name":     fmt.Sprintf("tunnel_%d", tunnelID),
 		"addr":     processServerAddress(fmt.Sprintf("%s:%d", defaultString(strings.TrimSpace(chainNode.ConnectIP), node.TCPListenAddr), chainNode.Port)),
 		"handler":  handlerCfg,
 		"listener": buildTunnelListenerConfig(protocol),
