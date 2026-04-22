@@ -33,8 +33,8 @@ React dashboard for FLVX. rolldown-vite + TypeScript + Tailwind v4 + shadcn/radi
 ## Commands
 
 ```bash
-npm install --legacy-peer-deps
-npm run dev           # http://0.0.0.0:3000
-npm run build         # tsc && vite build
-npm run lint          # eslint --fix
+pnpm install
+pnpm run dev           # http://0.0.0.0:3000
+pnpm run build         # tsc && vite build
+pnpm run lint          # eslint --fix
 ```

@@ -145,7 +145,7 @@ Examples:
   # Custom server configuration
   python with_server.py \\
     --server "make run" --port 6365 --cwd go-backend \\
-    --server "npm run dev" --port 3000 --cwd vite-frontend \\
+    --server "pnpm run dev" --port 3000 --cwd vite-frontend \\
     -- pytest -v
 
   # Use custom backend port
@@ -302,7 +302,7 @@ def build_servers(args) -> list[ServerProcess]:
 
         servers.append(
             ServerProcess(
-                command="npm run dev",
+                command="pnpm run dev",
                 port=args.frontend_port,
                 cwd=root / args.frontend_cwd,
                 env=frontend_env,

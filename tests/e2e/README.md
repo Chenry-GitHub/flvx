@@ -82,7 +82,7 @@ python with_server.py --backend-port 8080 --frontend-port 5173 -- pytest -v
 # Custom server commands
 python with_server.py \
   --server "make run" --port 6365 --cwd go-backend \
-  --server "npm run dev" --port 3000 --cwd vite-frontend \
+  --server "pnpm run dev" --port 3000 --cwd vite-frontend \
   -- pytest -v
 ```
 

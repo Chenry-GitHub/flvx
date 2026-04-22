@@ -21,11 +21,14 @@ jobs:
         with:
           node-version: '20.19.0'
 
+      - name: Install pnpm
+        run: npm install -g pnpm
+
       - name: Install dependencies
-        run: npm install --legacy-peer-deps
+        run: pnpm install --frozen-lockfile
 
       - name: Build
-        run: npm run build
+        run: pnpm run build
 
   backend:
     name: Build Go Backend

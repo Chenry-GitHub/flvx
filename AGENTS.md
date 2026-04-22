@@ -22,10 +22,10 @@ FLVX — traffic forwarding panel: Go admin API + Vite/React UI + Go agent.
 (cd go-backend && go test ./...)
 
 # Frontend
-(cd vite-frontend && npm install --legacy-peer-deps)
-(cd vite-frontend && npm run dev)             # host 0.0.0.0:3000
-(cd vite-frontend && npm run build)           # tsc && vite build
-(cd vite-frontend && npm run lint)            # eslint --fix (no typecheck command)
+(cd vite-frontend && pnpm install)
+(cd vite-frontend && pnpm run dev)             # host 0.0.0.0:3000
+(cd vite-frontend && pnpm run build)           # tsc && vite build
+(cd vite-frontend && pnpm run lint)            # eslint --fix (no typecheck command)
 
 # Agent
 (cd go-gost && go run .)

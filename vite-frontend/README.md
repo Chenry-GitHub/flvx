@@ -23,16 +23,16 @@ git clone https://github.com/frontio-ai/vite-template.git
 
 ### Install dependencies
 
-You can use one of them `npm`, `yarn`, `pnpm`, `bun`, Example using `npm`:
+You can use one of them `npm`, `yarn`, `pnpm`, `bun`, Example using `pnpm`:
 
 ```bash
-npm install
+pnpm install
 ```
 
-### Run the development server
+### Start development server
 
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 ### Setup pnpm (optional)
